@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Carbon Emissions Report — Central Steel Plant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --paper:#f4f4ef; --card:#ffffff; --ink:#1b2620; --muted:#6f7a72; --dim:#9aa49c;
+    --hair:#e5e7df; --s1:#1f7a5c; --s2:#3b82c4; --accent:#c2611c;
+    --warn:#b4451f; --good:#1f7a5c;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:1.55}
+  .mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+  .wrap{max-width:1240px;margin:0 auto;padding:24px}
+
+  header{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:16px}
+  .eyebrow{font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:var(--accent);font-weight:600}
+  h1{font-family:'Fraunces',serif;font-weight:600;font-size:30px;line-height:1.1;margin-top:4px}
+  header p{color:var(--muted);font-size:13px;margin-top:5px}
+  .spacer{flex:1}
+  .yearsel{display:flex;align-items:center;gap:8px}
+  .yearsel label{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim)}
+  select,input{font-family:inherit;font-size:14px;border:1px solid var(--hair);background:var(--card);color:var(--ink);border-radius:8px;padding:8px 10px}
+  select:focus,input:focus{outline:2px solid var(--s1);outline-offset:-1px}
+  button{background:var(--ink);color:#fff;border:0;border-radius:8px;padding:9px 15px;font-weight:600;cursor:pointer;font-family:inherit}
+  button:hover{background:#33433a}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}
+  .kpi{background:var(--card);border:1px solid var(--hair);border-radius:14px;padding:16px 18px}
+  .kpi .lab{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
+  .kpi .val{font-family:'Fraunces',serif;font-size:30px;font-weight:600;margin-top:8px;line-height:1}
+  .kpi .unit{font-size:12px;color:var(--dim);font-family:Inter}
+  .kpi .sub{font-size:12px;margin-top:7px;font-weight:600}
+  .up{color:var(--warn)} .down{color:var(--good)}
+  .kpi.feature{background:linear-gradient(160deg,#1f7a5c,#15604a);color:#fff;border:0}
+  .kpi.feature .lab,.kpi.feature .unit{color:#cdeadd}
+  .kpi.feature .sub{color:#eafaf2}
+
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g23{grid-template-columns:1.3fr 1fr}
+  .panel{background:var(--card);border:1px solid var(--hair);border-radius:14px;padding:18px;margin-top:14px}
+  .panel h2{font-family:'Fraunces',serif;font-size:17px;font-weight:600;display:flex;align-items:baseline;gap:10px}
+  .panel h2 .tag{margin-left:auto;font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;font-weight:500;letter-spacing:.3px}
+  .panel .hint{color:var(--muted);font-size:12.5px;margin:4px 0 10px}
+  .chartbox{position:relative;height:300px}
+  .donutbox{position:relative;height:300px}
+
+  .formgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field label{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+  .full{grid-column:1/-1}
+  .result{font-size:13px;margin-top:6px;min-height:18px}
+  .ok{color:var(--good)} .err{color:var(--warn)}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--hair)}
+  th{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);font-weight:600}
+  td.mono{font-family:'JetBrains Mono',monospace}
+  .tagpill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;text-transform:uppercase;letter-spacing:.4px}
+  .cur{background:#e3f3ec;color:#1f7a5c} .exp{background:#f0ede8;color:#92867a}
+  .scopechip{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px}
+  .sc1{background:#e3f3ec;color:#1f7a5c} .sc2{background:#e6eff7;color:#3b82c4}
+  footer{color:var(--dim);font-size:12px;text-align:center;margin:24px 0 8px}
+  .offline{background:#fff5e9;border:1px solid #f0c891;color:#92602a;font-size:12px;padding:8px 12px;border-radius:8px;margin-top:10px;display:none}
+  @media(max-width:880px){.kpis{grid-template-columns:repeat(2,1fr)}.g2,.g23{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">GHG Protocol · Scope 1 &amp; 2</div>
+      <h1>Carbon Emissions Report</h1>
+      <p>Central Steel Plant · direct (Scope 1) and purchased-energy (Scope 2) emissions</p>
+    </div>
+    <div class="spacer"></div>
+    <div class="yearsel">
+      <label for="year">Reporting year</label>
+      <select id="year"></select>
+    </div>
+  </header>
+
+  <div id="offline" class="offline">Showing bundled sample data — the live API isn’t reachable from a static file. Run the container to enable the form and live analytics.</div>
+
+  <div class="kpis">
+    <div class="kpi feature"><div class="lab">Emission intensity</div>
+      <div class="val" id="k_int">—</div><div class="unit">kgCO₂e / tonne of steel</div>
+      <div class="sub" id="k_int_emp">—</div></div>
+    <div class="kpi"><div class="lab">Total emissions</div>
+      <div class="val mono" id="k_total">—</div><div class="unit">MtCO₂e · <span id="k_total_year">—</span></div>
+      <div class="sub" id="k_total_yoy">—</div></div>
+    <div class="kpi"><div class="lab">Scope 1 — direct</div>
+      <div class="val mono" id="k_s1">—</div><div class="unit">MtCO₂e</div>
+      <div class="sub" id="k_s1_sh" style="color:var(--s1)">—</div></div>
+    <div class="kpi"><div class="lab">Scope 2 — indirect</div>
+      <div class="val mono" id="k_s2">—</div><div class="unit">MtCO₂e</div>
+      <div class="sub" id="k_s2_sh" style="color:var(--s2)">—</div></div>
+  </div>
+
+  <div class="grid g23">
+    <div class="panel">
+      <h2>Year-over-year emissions <span class="tag">Scope 1 + 2, stacked</span></h2>
+      <p class="hint">Total emissions by scope, current vs previous year.</p>
+      <div class="chartbox"><canvas id="yoyChart"></canvas></div>
+    </div>
+    <div class="panel">
+      <h2>Emission hotspots <span class="tag" id="hot_year">—</span></h2>
+      <p class="hint">Share of total emissions by source — largest contributors first.</p>
+      <div class="donutbox"><canvas id="hotChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Monthly emissions trend <span class="tag" id="mon_year">—</span></h2>
+    <p class="hint">Total monthly emissions through the reporting year, split by scope.</p>
+    <div class="chartbox"><canvas id="monChart"></canvas></div>
+  </div>
+
+  <div class="grid g2">
+    <div class="panel">
+      <h2>Record an emission <span class="tag">Scope 1 &amp; 2</span></h2>
+      <p class="hint">The engine auto-selects the emission factor valid on the activity date.</p>
+      <div class="formgrid">
+        <div class="field"><label>Scope</label>
+          <select id="f_scope"><option value="1">Scope 1 — direct</option><option value="2">Scope 2 — indirect</option></select></div>
+        <div class="field"><label>Source / activity</label><select id="f_activity"></select></div>
+        <div class="field"><label>Quantity</label><input id="f_qty" type="number" min="0" step="any" placeholder="e.g. 1000"></div>
+        <div class="field"><label>Activity date</label><input id="f_date" type="date" value="2024-06-15"></div>
+        <div class="full"><button id="f_submit">Add record</button>
+          <span id="f_result" class="result"></span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Log a business metric <span class="tag">for intensity</span></h2>
+      <p class="hint">Production / headcount drives the emission-intensity KPI.</p>
+      <div class="formgrid">
+        <div class="field"><label>Metric</label>
+          <select id="m_name"><option>Tonnes of Steel Produced</option><option>Number of Employees</option></select></div>
+        <div class="field"><label>Value</label><input id="m_val" type="number" min="0" step="any" placeholder="e.g. 420000"></div>
+        <div class="field"><label>Date</label><input id="m_date" type="date" value="2024-06-28"></div>
+        <div class="field"><label>&nbsp;</label><button id="m_submit">Add metric</button></div>
+        <div class="full"><span id="m_result" class="result"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Emission factors — version history <span class="tag">historical accuracy</span></h2>
+    <p class="hint">Each source keeps dated factor versions; a record always uses the version valid on its activity date. Expired versions are retained for restating past years.</p>
+    <div style="max-height:300px;overflow:auto">
+      <table><thead><tr><th>Source</th><th>Scope</th><th>Factor (tCO₂e/unit)</th><th>Unit</th><th>Valid from</th><th>Valid to</th><th>Status</th><th>Source</th></tr></thead>
+      <tbody id="factorBody"></tbody></table>
+    </div>
+  </div>
+
+  <footer>GHG Emissions Reporting Platform · GHG Protocol Scope 1 &amp; 2 · prototype</footer>
+</div>
+
+<script>
+const SAMPLE = {"years": [2023, 2024], "current_year": 2024, "yoy": {"unit": "tCO2e", "current_year": 2024, "previous_year": 2023, "current": {"scope1": 9055505.02, "scope2": 1915973.79, "total": 10971478.81}, "previous": {"scope1": 8491196.8, "scope2": 1821934.51, "total": 10313131.31}, "total_change_pct": 6.4}, "intensity": {"2023": {"year": 2023, "total_emissions_tco2e": 10313131.31, "steel_tonnes": 4601012.0, "employees": 12000.0, "intensity_kgco2e_per_tonne": 2241.5, "intensity_tco2e_per_employee": 859.4}, "2024": {"year": 2024, "total_emissions_tco2e": 10971478.81, "steel_tonnes": 5005165.0, "employees": 12500.0, "intensity_kgco2e_per_tonne": 2192.0, "intensity_tco2e_per_employee": 877.7}}, "hotspot": {"2023": {"year": 2023, "unit": "tCO2e", "total": 10313131.31, "sources": [{"source": "Coking Coal", "scope": 1, "emissions": 4073901.87, "share_pct": 39.5}, {"source": "Grid Electricity", "scope": 2, "emissions": 1756657.46, "share_pct": 17.0}, {"source": "Process Gases", "scope": 1, "emissions": 1168495.0, "share_pct": 11.3}, {"source": "Coke", "scope": 1, "emissions": 1100328.85, "share_pct": 10.7}, {"source": "Natural Gas", "scope": 1, "emissions": 789625.19, "share_pct": 7.7}, {"source": "Fluxes", "scope": 1, "emissions": 521886.61, "share_pct": 5.1}, {"source": "Ferroalloys", "scope": 1, "emissions": 351554.39, "share_pct": 3.4}, {"source": "Alternative Fuels", "scope": 1, "emissions": 264375.77, "share_pct": 2.6}, {"source": "Diesel & Fuel Oils", "scope": 1, "emissions": 221029.13, "share_pct": 2.1}, {"source": "Imported Steam", "scope": 2, "emissions": 65277.05, "share_pct": 0.6}]}, "2024": {"year": 2024, "unit": "tCO2e", "total": 10971478.81, "sources": [{"source": "Coking Coal", "scope": 1, "emissions": 4334331.63, "share_pct": 39.5}, {"source": "Grid Electricity", "scope": 2, "emissions": 1849685.45, "share_pct": 16.9}, {"source": "Process Gases", "scope": 1, "emissions": 1249347.88, "share_pct": 11.4}, {"source": "Coke", "scope": 1, "emissions": 1164019.84, "share_pct": 10.6}, {"source": "Natural Gas", "scope": 1, "emissions": 834542.88, "share_pct": 7.6}, {"source": "Fluxes", "scope": 1, "emissions": 574009.33, "share_pct": 5.2}, {"source": "Ferroalloys", "scope": 1, "emissions": 382158.6, "share_pct": 3.5}, {"source": "Alternative Fuels", "scope": 1, "emissions": 277083.14, "share_pct": 2.5}, {"source": "Diesel & Fuel Oils", "scope": 1, "emissions": 240011.71, "share_pct": 2.2}, {"source": "Imported Steam", "scope": 2, "emissions": 66288.33, "share_pct": 0.6}]}}, "monthly": {"2023": {"year": 2023, "unit": "tCO2e", "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], "scope1": [754403.22, 717633.9, 733089.43, 700893.46, 699774.89, 673577.93, 662217.4, 667457.6, 698861.02, 724899.72, 727591.84, 730796.41], "scope2": [155762.53, 158888.35, 155893.51, 153584.3, 148073.72, 137821.61, 142475.7, 145835.23, 152898.94, 158871.15, 159682.9, 152146.57], "total": [910165.75, 876522.25, 888982.94, 854477.76, 847848.61, 811399.54, 804693.1, 813292.83, 851759.96, 883770.87, 887274.74, 882942.98]}, "2024": {"year": 2024, "unit": "tCO2e", "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], "scope1": [789613.28, 775985.17, 796135.22, 758081.93, 736089.51, 710334.88, 699880.9, 706029.05, 753110.14, 780677.96, 776931.26, 772635.7], "scope2": [167084.99, 161592.68, 164654.87, 155196.74, 155123.73, 154077.9, 144550.2, 153777.06, 157498.6, 163337.38, 170172.57, 168907.07], "total": [956698.27, 937577.85, 960790.09, 913278.67, 891213.24, 864412.78, 844431.1, 859806.11, 910608.74, 944015.34, 947103.83, 941542.77]}}, "factors": [{"id": 17, "activity": "Alternative Fuels", "scope": 1, "unit": "tonnes", "co2e_per_unit": 1.9, "source": "GHG Protocol", "valid_from": "2023-01-01", "valid_to": "2023-12-31", "version": 1}, {"id": 18, "activity": "Alternative Fuels", "scope": 1, "unit": "tonnes", "co2e_per_unit": 1.85, "source": "GHG Protocol", "valid_from": "2024-01-01", "valid_to": null, "version": 2}, {"id": 4, "activity": "Coke", "scope": 1, "unit": "tonnes", "co2e_per_unit": 3.12, "source": "IPCC 2006 Guidelines", "valid_from": "2022-01-01", "valid_to": "2022-12-31", "version": 1}, {"id": 5, "activity": "Coke", "scope": 1, "unit": "tonnes", "co2e_per_unit": 3.1, "source": "IPCC 2006 Guidelines", "valid_from": "2023-01-01", "valid_to": "2023-12-31", "version": 2}, {"id": 6, "activity": "Coke", "scope": 1, "unit": "tonnes", "co2e_per_unit": 3.08, "source": "IPCC 2006 Guidelines", "valid_from": "2024-01-01", "valid_to": null, "version": 3}, {"id": 1, "activity": "Coking Coal", "scope": 1, "unit": "tonnes", "co2e_per_unit": 2.48, "source": "IPCC 2006 Guidelines", "valid_from": "2022-01-01", "valid_to": "2022-12-31", "version": 1}, {"id": 2, "activity": "Coking Coal", "scope": 1, "unit": "tonnes", "co2e_per_unit": 2.45, "source": "IPCC 2006 Guidelines", "valid_from": "2023-01-01", "valid_to": "2023-12-31", "version": 2}, {"id": 3, "activity": "Coking Coal", "scope": 1, "unit": "tonnes", "co2e_per_unit": 2.42, "source": "IPCC 2006 Guidelines", "valid_from": "2024-01-01", "valid_to": null, "version": 3}, {"id": 15, "activity": "Diesel & Fuel Oils", "scope": 1, "unit": "KL", "co2e_per_unit": 2.65, "source": "IPCC 2006 Guidelines", "valid_from": "2023-01-01", "valid_to": "2023-12-31", "version": 1}, {"id": 16, "activity": "Diesel & Fuel Oils", "scope": 1, "unit": "KL", "co2e_per_unit": 2.68, "source": "IPCC 2006 Guidelines", "valid_from": "2024-01-01", "valid_to": null, "version": 2}, {"id": 13, "activity": "Ferroalloys", "scope": 1, "unit": "tonnes", "co2e_per_unit": 2.1, "source": "IPCC 2006 Guidelines", "valid_from": "2023-01-01", "valid_to": "2023-12-31", "version": 1}, {"id": 14, "activity": "Ferroalloys", "scope": 1, "unit": "tonnes", "co2e_per_unit": 2.12, "source": "IPCC 2006 Guidelines", "valid_from": "2024-01-01", "valid_to": null, "version": 2}, {"id": 11, "activity": "Fluxes", "scope": 1, "unit": "tonnes", "co2e_per_unit": 0.43, "source": "IPCC 2006 (calcination)", "valid_from": "2023-01-01", "valid_to": "2023-12-31", "version": 1}, {"id": 12, "activity": "Fluxes", "scope": 1, "unit": "tonnes", "co2e_per_unit": 0.44, "source": "IPCC 2006 (calcination)", "valid_from": "2024-01-01", "valid_to": null, "version": 2}, {"id": 19, "activity": "Grid Electricity", "scope": 2, "unit": "MWh", "co2e_per_unit": 0.74, "source": "CEA India CO2 Database 2024", "valid_from": "2022-01-01", "valid_to": "2022-12-31", "version": 1}, {"id": 20, "activity": "Grid Electricity", "scope": 2, "unit": "MWh", "co2e_per_unit": 0.72, "source": "CEA India CO2 Database 2024", "valid_from": "2023-01-01", "valid_to": "2023-12-31", "version": 2}, {"id": 21, "activity": "Grid Electricity", "scope": 2, "unit": "MWh", "co2e_per_unit": 0.71, "source": "CEA India CO2 Database 2024", "valid_from": "2024-01-01", "valid_to": null, "version": 3}, {"id": 22, "activity": "Imported Steam", "scope": 2, "unit": "tonnes", "co2e_per_unit": 0.2, "source": "Supplier disclosure", "valid_from": "2023-01-01", "valid_to": "2023-12-31", "version": 1}, {"id": 23, "activity": "Imported Steam", "scope": 2, "unit": "tonnes", "co2e_per_unit": 0.19, "source": "Supplier disclosure", "valid_from": "2024-01-01", "valid_to": null, "version": 2}, {"id": 9, "activity": "Natural Gas", "scope": 1, "unit": "kNm3", "co2e_per_unit": 2.42, "source": "IPCC 2006 Guidelines", "valid_from": "2023-01-01", "valid_to": "2023-12-31", "version": 1}, {"id": 10, "activity": "Natural Gas", "scope": 1, "unit": "kNm3", "co2e_per_unit": 2.4, "source": "IPCC 2006 Guidelines", "valid_from": "2024-01-01", "valid_to": null, "version": 2}, {"id": 7, "activity": "Process Gases", "scope": 1, "unit": "kNm3", "co2e_per_unit": 1.8, "source": "Worldsteel CO2 Methodology", "valid_from": "2023-01-01", "valid_to": "2023-12-31", "version": 1}, {"id": 8, "activity": "Process Gases", "scope": 1, "unit": "kNm3", "co2e_per_unit": 1.78, "source": "Worldsteel CO2 Methodology", "valid_from": "2024-01-01", "valid_to": null, "version": 2}], "activities": [{"activity": "Alternative Fuels", "scope": 1, "unit": "tonnes"}, {"activity": "Coke", "scope": 1, "unit": "tonnes"}, {"activity": "Coking Coal", "scope": 1, "unit": "tonnes"}, {"activity": "Diesel & Fuel Oils", "scope": 1, "unit": "KL"}, {"activity": "Ferroalloys", "scope": 1, "unit": "tonnes"}, {"activity": "Fluxes", "scope": 1, "unit": "tonnes"}, {"activity": "Grid Electricity", "scope": 2, "unit": "MWh"}, {"activity": "Imported Steam", "scope": 2, "unit": "tonnes"}, {"activity": "Natural Gas", "scope": 1, "unit": "kNm3"}, {"activity": "Process Gases", "scope": 1, "unit": "kNm3"}]};
+const API_BASE = (location.protocol === 'file:') ? null : '';
+let live = (API_BASE !== null);
+const $ = id => document.getElementById(id);
+const palette = ['#1f7a5c','#2f9e7a','#5bb89a','#8ccab4','#3b82c4','#79a8d6','#c2611c','#d98a4e','#a78b71','#cbbfa6'];
+let yoyChart, hotChart, monChart;
+const fmtM = v => (v/1e6).toFixed(2);
+const fmtN = v => Math.round(v).toLocaleString('en-IN');
+
+async function fetchJSON(p){ const r = await fetch(API_BASE+p); if(!r.ok) throw new Error(p); return r.json(); }
+
+async function loadYear(year){
+  if(live){
+    try{
+      const [yoy,intensity,hotspot,monthly,factors] = await Promise.all([
+        fetchJSON('/analytics/yoy'), fetchJSON('/analytics/intensity?year='+year),
+        fetchJSON('/analytics/hotspot?year='+year), fetchJSON('/analytics/monthly?year='+year),
+        fetchJSON('/factors')]);
+      return {yoy,intensity,hotspot,monthly,factors};
+    }catch(e){ live=false; $('offline').style.display='block'; console.warn('API down, using sample',e); }
+  }
+  return {yoy:SAMPLE.yoy, intensity:SAMPLE.intensity[year], hotspot:SAMPLE.hotspot[year],
+          monthly:SAMPLE.monthly[year], factors:SAMPLE.factors};
+}
+
+function renderKPIs(d, year){
+  const yoy=d.yoy, cur = (year==yoy.current_year)?yoy.current:yoy.previous;
+  $('k_int').textContent = d.intensity.intensity_kgco2e_per_tonne?.toLocaleString('en-IN') ?? '—';
+  $('k_int_emp').textContent = (d.intensity.intensity_tco2e_per_employee?.toLocaleString('en-IN') ?? '—')+' tCO₂e / employee';
+  $('k_total').textContent = fmtM(cur.total);
+  $('k_total_year').textContent = year;
+  const ch = yoy.total_change_pct;
+  $('k_total_yoy').innerHTML = (year==yoy.current_year && ch!=null)
+    ? `<span class="${ch>=0?'up':'down'}">${ch>=0?'▲':'▼'} ${Math.abs(ch)}% vs ${yoy.previous_year}</span>` : '';
+  $('k_s1').textContent = fmtM(cur.scope1); $('k_s2').textContent = fmtM(cur.scope2);
+  $('k_s1_sh').textContent = (cur.scope1/cur.total*100).toFixed(0)+'% of total';
+  $('k_s2_sh').textContent = (cur.scope2/cur.total*100).toFixed(0)+'% of total';
+}
+
+function renderYoY(yoy){
+  const labels=[yoy.previous_year, yoy.current_year];
+  const s1=[yoy.previous.scope1, yoy.current.scope1], s2=[yoy.previous.scope2, yoy.current.scope2];
+  yoyChart && yoyChart.destroy();
+  yoyChart = new Chart($('yoyChart'),{type:'bar',
+    data:{labels,datasets:[
+      {label:'Scope 1', data:s1.map(v=>v/1e6), backgroundColor:getC('--s1'), stack:'s', borderRadius:4},
+      {label:'Scope 2', data:s2.map(v=>v/1e6), backgroundColor:getC('--s2'), stack:'s', borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{usePointStyle:true,boxWidth:8}},
+        tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(2)} MtCO₂e`}}},
+      scales:{x:{grid:{display:false},stacked:true},
+        y:{stacked:true,title:{display:true,text:'MtCO₂e'},grid:{color:'#eef0ea'}}}}});
+}
+
+function renderHotspot(h){
+  $('hot_year').textContent = h.year;
+  const top = h.sources.slice(0,8);
+  const other = h.sources.slice(8).reduce((a,s)=>a+s.emissions,0);
+  const labels = top.map(s=>s.source).concat(other>0?['Other']:[]);
+  const data = top.map(s=>s.emissions).concat(other>0?[other]:[]);
+  hotChart && hotChart.destroy();
+  hotChart = new Chart($('hotChart'),{type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:palette,borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{legend:{position:'right',labels:{usePointStyle:true,boxWidth:8,font:{size:11}}},
+        tooltip:{callbacks:{label:c=>` ${c.label}: ${(c.parsed/1e6).toFixed(2)} Mt (${(c.parsed/h.total*100).toFixed(1)}%)`}}}}});
+}
+
+function renderMonthly(m){
+  $('mon_year').textContent = m.year;
+  monChart && monChart.destroy();
+  monChart = new Chart($('monChart'),{type:'line',
+    data:{labels:m.months,datasets:[
+      {label:'Total', data:m.total.map(v=>v/1e6), borderColor:getC('--accent'), backgroundColor:'rgba(194,97,28,.08)', fill:true, tension:.35, borderWidth:2.4, pointRadius:0},
+      {label:'Scope 1', data:m.scope1.map(v=>v/1e6), borderColor:getC('--s1'), tension:.35, borderWidth:1.6, pointRadius:0},
+      {label:'Scope 2', data:m.scope2.map(v=>v/1e6), borderColor:getC('--s2'), tension:.35, borderWidth:1.6, pointRadius:0}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'bottom',labels:{usePointStyle:true,boxWidth:8}},
+        tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(3)} MtCO₂e`}}},
+      scales:{x:{grid:{display:false}},y:{title:{display:true,text:'MtCO₂e'},grid:{color:'#eef0ea'}}}}});
+}
+
+function renderFactors(factors){
+  const tb=$('factorBody'); tb.innerHTML='';
+  factors.forEach(f=>{
+    const expired = f.valid_to!==null;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${f.activity}</td>
+      <td><span class="scopechip sc${f.scope}">S${f.scope}</span></td>
+      <td class="mono">${f.co2e_per_unit}</td><td>${f.unit}</td>
+      <td class="mono">${f.valid_from}</td><td class="mono">${f.valid_to??'—'}</td>
+      <td><span class="tagpill ${expired?'exp':'cur'}">${expired?'expired':'current'}</span></td>
+      <td style="color:var(--muted)">${f.source}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function fillActivities(scope){
+  const sel=$('f_activity'); sel.innerHTML='';
+  (SAMPLE.activities||[]).filter(a=>a.scope==scope).forEach(a=>{
+    const o=document.createElement('option'); o.value=a.activity; o.textContent=`${a.activity} (${a.unit})`; sel.appendChild(o);
+  });
+}
+
+async function renderAll(){
+  const year=parseInt($('year').value);
+  const d=await loadYear(year);
+  renderKPIs(d, year); renderYoY(d.yoy); renderHotspot(d.hotspot); renderMonthly(d.monthly); renderFactors(d.factors);
+}
+
+function getC(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+
+$('f_scope').addEventListener('change', e=>fillActivities(e.target.value));
+$('f_submit').addEventListener('click', async ()=>{
+  const r=$('f_result');
+  if(!live){ r.className='result err'; r.textContent='Live API required — run the container to submit.'; return; }
+  const body={scope:parseInt($('f_scope').value), activity:$('f_activity').value,
+              quantity:parseFloat($('f_qty').value), activity_date:$('f_date').value};
+  if(!body.quantity){ r.className='result err'; r.textContent='Enter a quantity.'; return; }
+  try{
+    const res=await (await fetch(API_BASE+'/records',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+    r.className='result ok'; r.textContent=`Added — ${fmtN(res.calculated_emissions_tco2e)} tCO₂e (factor #${res.factor_id}).`;
+    renderAll();
+  }catch(e){ r.className='result err'; r.textContent='Failed: '+e.message; }
+});
+$('m_submit').addEventListener('click', async ()=>{
+  const r=$('m_result');
+  if(!live){ r.className='result err'; r.textContent='Live API required — run the container to submit.'; return; }
+  const body={date:$('m_date').value, metric_name:$('m_name').value, value:parseFloat($('m_val').value), unit:''};
+  if(!body.value){ r.className='result err'; r.textContent='Enter a value.'; return; }
+  try{
+    await fetch(API_BASE+'/metrics',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    r.className='result ok'; r.textContent='Metric logged.'; renderAll();
+  }catch(e){ r.className='result err'; r.textContent='Failed: '+e.message; }
+});
+
+(async function init(){
+  const ysel=$('year'); (SAMPLE.years||[2024]).forEach(y=>{const o=document.createElement('option');o.value=y;o.textContent=y;ysel.appendChild(o);});
+  ysel.value = SAMPLE.current_year || (SAMPLE.years?.slice(-1)[0]);
+  ysel.addEventListener('change', renderAll);
+  fillActivities(1);
+  await renderAll();
+})();
+</script>
+</body>
+</html>

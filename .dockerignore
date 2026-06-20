@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.git/
+.venv/
+venv/
+data/ghg.db
+frontend/ghg_sample.json
+*.log
