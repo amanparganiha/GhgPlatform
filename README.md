@@ -7,6 +7,7 @@ layer that powers an ESG dashboard (year-over-year, intensity, and source hotspo
 
 > Built for the Exascale Deeptech & AI — Data Science Developer Intern assignment.
 > Modelled on an integrated steel plant (inspired by the provided `GHG_Sheet_.xlsx`).
+> Deployed link : https://ghgplatform.onrender.com
 
 ---
 
